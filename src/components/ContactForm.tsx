@@ -7,8 +7,8 @@ import { Textarea } from "./ui/ace-textarea";
 import { cn } from "@/lib/utils";
 import { useToast } from "./ui/use-toast";
 import { Button } from "./ui/button";
-import { useRouter } from "next/navigation";
 import { z } from "zod";
+import { config } from "@/data/config";
 
 const formSchema = z.object({
   fullName: z.string().min(2, "Full name must be at least 2 characters"),
@@ -26,7 +26,6 @@ const ContactForm = () => {
   const [errors, setErrors] = React.useState<FieldErrors>({});
 
   const { toast } = useToast();
-  const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -44,40 +43,17 @@ const ContactForm = () => {
     }
 
     setLoading(true);
-    try {
-      const res = await fetch("/api/send", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ fullName, email, message }),
-      });
-      if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.error || `Request failed (${res.status})`);
-      }
-      toast({
-        title: "Thank you!",
-        description: "I'll get back to you as soon as possible.",
-        variant: "default",
-        className: cn("top-0 mx-auto flex fixed md:top-4 md:right-4"),
-      });
-      setLoading(false);
-      setFullName("");
-      setEmail("");
-      setMessage("");
-      const timer = setTimeout(() => {
-        router.push("/");
-        clearTimeout(timer);
-      }, 1000);
-    } catch (err) {
-      toast({
-        title: "Error",
-        description: "Something went wrong! Please try again.",
-        className: cn(
-          "top-0 w-full flex justify-center fixed md:max-w-7xl md:top-4 md:right-4"
-        ),
-        variant: "destructive",
-      });
-    }
+    const subject = encodeURIComponent(`Portfolio contact from ${fullName}`);
+    const body = encodeURIComponent(
+      `Name: ${fullName}\nEmail: ${email}\n\n${message}`
+    );
+    window.location.href = `mailto:${config.email}?subject=${subject}&body=${body}`;
+    toast({
+      title: "Email draft opened",
+      description: "Send the email from your mail app and I'll get back to you.",
+      variant: "default",
+      className: cn("top-0 mx-auto flex fixed md:top-4 md:right-4"),
+    });
     setLoading(false);
   };
   return (

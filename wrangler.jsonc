@@ -1,13 +1,13 @@
 {
   "$schema": "./node_modules/wrangler/config-schema.json",
   "name": "portfolio",
-  "main": ".open-next/worker.js",
+  "main": "src/worker.ts",
   "compatibility_date": "2026-05-12",
   "compatibility_flags": [
     "nodejs_compat"
   ],
   "assets": {
-    "directory": ".open-next/assets",
+    "directory": "out",
     "binding": "ASSETS"
   },
   "observability": {
