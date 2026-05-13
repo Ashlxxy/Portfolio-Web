@@ -94,6 +94,94 @@ const INITIAL_STATE: SocketContextType = {
 export const SocketContext = createContext<SocketContextType>(INITIAL_STATE);
 
 const SESSION_ID_KEY = "portfolio-site-session-id";
+const LOCAL_SOCKET_ID_KEY = "portfolio-local-socket-id";
+const LOCAL_PRESENCE_KEY = "portfolio-local-presence";
+
+const NAME_ADJECTIVES = [
+  "Brave",
+  "Bold",
+  "Bright",
+  "Calm",
+  "Clever",
+  "Creative",
+  "Curious",
+  "Gentle",
+  "Happy",
+  "Kind",
+  "Lucky",
+  "Mighty",
+  "Proud",
+  "Quick",
+  "Silent",
+  "Smart",
+];
+
+const NAME_NOUNS = [
+  "Falcon",
+  "Eagle",
+  "Fox",
+  "Otter",
+  "Serpent",
+  "Panda",
+  "Tiger",
+  "Wolf",
+  "Lynx",
+  "Raven",
+  "Hawk",
+  "Bear",
+  "Phoenix",
+  "Shark",
+  "Lion",
+  "Dragon",
+];
+
+const PROFILE_COLORS = [
+  "#60a5fa",
+  "#f87171",
+  "#4ade80",
+  "#facc15",
+  "#c084fc",
+  "#fb923c",
+  "#f43f5e",
+  "#818cf8",
+  "#22d3ee",
+  "#a3e635",
+];
+
+function randomItem<T>(items: T[]): T {
+  return items[Math.floor(Math.random() * items.length)];
+}
+
+function getOrCreateLocalId(key: string, prefix: string) {
+  const existing = localStorage.getItem(key);
+  if (existing) return existing;
+  const id = `${prefix}-${crypto.randomUUID()}`;
+  localStorage.setItem(key, id);
+  return id;
+}
+
+function createRandomProfile() {
+  const name = `${randomItem(NAME_ADJECTIVES)} ${randomItem(NAME_NOUNS)}`;
+  return {
+    name,
+    avatar: String(Math.floor(Math.random() * 100) + 1),
+    color: randomItem(PROFILE_COLORS),
+  };
+}
+
+function readLocalPresence(): User[] {
+  try {
+    const data = JSON.parse(localStorage.getItem(LOCAL_PRESENCE_KEY) || "[]") as User[];
+    const activeAfter = Date.now() - 12_000;
+    return data.filter((user) => new Date(user.lastSeen).getTime() > activeAfter);
+  } catch {
+    return [];
+  }
+}
+
+function writeLocalPresence(users: User[]) {
+  localStorage.setItem(LOCAL_PRESENCE_KEY, JSON.stringify(users));
+}
 
 const SocketContextProvider = ({ children }: { children: ReactNode }) => {
   const [socket, setSocket] = useState<Socket | null>(null);
@@ -143,6 +231,215 @@ const SocketContextProvider = ({ children }: { children: ReactNode }) => {
     });
   }, [users]);
   const { toast } = useToast();
+
+  // Local static-site fallback. This keeps the online/profile UI working on
+  // Cloudflare static assets. Set NEXT_PUBLIC_WS_URL to use the real Socket.IO
+  // backend for cross-device realtime presence and chat.
+  useEffect(() => {
+    if (process.env.NEXT_PUBLIC_WS_URL || typeof window === "undefined") return;
+
+    const sessionId = getOrCreateLocalId(SESSION_ID_KEY, "local-session");
+    const socketId = getOrCreateLocalId(LOCAL_SOCKET_ID_KEY, "local-socket");
+    const savedProfile = {
+      name: localStorage.getItem("username") || "",
+      avatar: localStorage.getItem("avatar") || "",
+      color: localStorage.getItem("color") || "",
+    };
+    const randomProfile = createRandomProfile();
+    const profile = {
+      name: savedProfile.name || randomProfile.name,
+      avatar: savedProfile.avatar || randomProfile.avatar,
+      color: savedProfile.color || randomProfile.color,
+    };
+
+    localStorage.setItem("username", profile.name);
+    localStorage.setItem("avatar", profile.avatar);
+    localStorage.setItem("color", profile.color);
+
+    const makeCurrentUser = (): User => ({
+      id: sessionId,
+      socketId,
+      name: localStorage.getItem("username") || profile.name,
+      avatar: localStorage.getItem("avatar") || profile.avatar,
+      color: localStorage.getItem("color") || profile.color,
+      isOnline: true,
+      location: "Unknown",
+      flag: "??",
+      lastSeen: new Date().toISOString(),
+      createdAt: new Date().toISOString(),
+    });
+
+    let webSocket: WebSocket | null = null;
+    let localModeStarted = false;
+    let interval = 0;
+    let channel: BroadcastChannel | null = null;
+
+    const publishPresence = () => {
+      const current = makeCurrentUser();
+      const others = readLocalPresence().filter((user) => user.socketId !== socketId);
+      const nextUsers = [current, ...others];
+      writeLocalPresence(nextUsers);
+      setUsers(nextUsers);
+      channel?.postMessage({ type: "presence", users: nextUsers });
+    };
+
+    const handlers = new Map<string, Set<(data: unknown) => void>>();
+    const dispatch = (event: string, data?: unknown) => {
+      handlers.get(event)?.forEach((handler) => handler(data));
+    };
+
+    const localSocket = {
+      id: socketId,
+      connected: false,
+      on: (event: string, handler: (data: unknown) => void) => {
+        const eventHandlers = handlers.get(event) || new Set();
+        eventHandlers.add(handler);
+        handlers.set(event, eventHandlers);
+        return localSocket;
+      },
+      off: (event: string, handler: (data: unknown) => void) => {
+        handlers.get(event)?.delete(handler);
+        return localSocket;
+      },
+      emit: (event: string, payload?: { username?: string; avatar?: string; color?: string; content?: string }) => {
+        if (webSocket?.readyState === WebSocket.OPEN) {
+          webSocket.send(JSON.stringify({ event, data: payload }));
+          if (event === "update-user" && payload) {
+            if (payload.username) localStorage.setItem("username", payload.username);
+            if (payload.avatar) localStorage.setItem("avatar", payload.avatar);
+            if (payload.color) localStorage.setItem("color", payload.color);
+          }
+          return localSocket;
+        }
+
+        if (event === "update-user" && payload) {
+          if (payload.username) localStorage.setItem("username", payload.username);
+          if (payload.avatar) localStorage.setItem("avatar", payload.avatar);
+          if (payload.color) localStorage.setItem("color", payload.color);
+          publishPresence();
+        }
+        if (event === "msg-send" && payload?.content) {
+          const current = makeCurrentUser();
+          const message: Message = {
+            id: `${Date.now()}`,
+            sessionId: current.id,
+            flag: current.flag,
+            country: current.location,
+            username: current.name,
+            avatar: current.avatar,
+            color: current.color,
+            content: payload.content,
+            createdAt: new Date().toISOString(),
+          };
+          setMsgs((existing) => [...existing, message]);
+        }
+        return localSocket;
+      },
+      disconnect: () => {
+        webSocket?.close();
+        return localSocket;
+      },
+      connect: () => localSocket,
+      io: { on: () => localSocket, off: () => localSocket },
+    } as unknown as Socket;
+
+    setSocket(localSocket);
+    socketRef.current = localSocket;
+    initStatusRef.current = "loaded";
+    setInitStatus("loaded");
+    setHasMoreMessages(false);
+
+    const handleStorage = (event: StorageEvent) => {
+      if (event.key === LOCAL_PRESENCE_KEY) {
+        setUsers(readLocalPresence());
+      }
+    };
+    const handleChannel = (event: MessageEvent<{ type: string; users: User[] }>) => {
+      if (event.data?.type === "presence") setUsers(readLocalPresence());
+    };
+
+    const startLocalMode = () => {
+      if (localModeStarted) return;
+      localModeStarted = true;
+      localSocket.connected = true;
+      channel = "BroadcastChannel" in window ? new BroadcastChannel("portfolio-local-presence") : null;
+      publishPresence();
+      interval = window.setInterval(publishPresence, 5_000);
+      window.addEventListener("storage", handleStorage);
+      channel?.addEventListener("message", handleChannel);
+      dispatch("connect");
+    };
+
+    try {
+      const presenceUrl = new URL("/presence", window.location.href);
+      presenceUrl.protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+      presenceUrl.searchParams.set("sessionId", sessionId);
+      presenceUrl.searchParams.set("name", profile.name);
+      presenceUrl.searchParams.set("avatar", profile.avatar);
+      presenceUrl.searchParams.set("color", profile.color);
+
+      webSocket = new WebSocket(presenceUrl);
+      const fallbackTimer = window.setTimeout(() => {
+        if (webSocket?.readyState !== WebSocket.OPEN) {
+          webSocket?.close();
+          startLocalMode();
+        }
+      }, 1500);
+
+      webSocket.addEventListener("open", () => {
+        window.clearTimeout(fallbackTimer);
+        localSocket.connected = true;
+        dispatch("connect");
+      });
+      webSocket.addEventListener("message", (event) => {
+        try {
+          const message = JSON.parse(String(event.data)) as { event: string; data: unknown };
+          if (message.event === "session") {
+            const data = message.data as { sessionId?: string; socketId?: string };
+            if (data.sessionId) localStorage.setItem(SESSION_ID_KEY, data.sessionId);
+            if (data.socketId) localSocket.id = data.socketId;
+          }
+          if (message.event === "users-updated") setUsers(message.data as User[]);
+          if (message.event === "msg-receive") setMsgs((existing) => [...existing, message.data as Message]);
+          if (message.event === "cursor-changed") {
+            const data = message.data as { pos: CursorPosition; socketId: string };
+            setCursorPositions((prev) => {
+              const next = new Map(prev);
+              next.set(data.socketId, data.pos);
+              return next;
+            });
+          }
+          dispatch(message.event, message.data);
+        } catch {
+          // Ignore malformed presence messages.
+        }
+      });
+      webSocket.addEventListener("close", () => {
+        localSocket.connected = false;
+        dispatch("disconnect");
+        startLocalMode();
+      });
+      webSocket.addEventListener("error", () => {
+        localSocket.connected = false;
+        dispatch("connect_error");
+        startLocalMode();
+      });
+    } catch {
+      startLocalMode();
+    }
+
+    return () => {
+      if (interval) window.clearInterval(interval);
+      const remaining = readLocalPresence().filter((user) => user.socketId !== socketId);
+      writeLocalPresence(remaining);
+      channel?.postMessage({ type: "presence", users: remaining });
+      channel?.close();
+      window.removeEventListener("storage", handleStorage);
+      webSocket?.close();
+      socketRef.current = null;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // SETUP SOCKET.IO
   useEffect(() => {

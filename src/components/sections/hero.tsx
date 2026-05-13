@@ -18,7 +18,7 @@ import SectionWrapper from "../ui/section-wrapper";
 
 const HeroSection = () => {
   const { isLoading } = usePreloader();
-  const heroName = "Ashlxy";
+  const heroName = "Ade Rainhard";
 
   return (
     <SectionWrapper id="hero" className={cn("relative w-full h-screen")}>
