@@ -143,6 +143,8 @@ function GitHubStarsButton({
   return (
     <motion.a
       href={repoUrl}
+      aria-label={`Star ${username}/${repo} on GitHub`}
+      title={`Star ${username}/${repo} on GitHub`}
       rel="noopener noreferrer"
       target="_blank"
       whileTap={{ scale: 0.95 }}
