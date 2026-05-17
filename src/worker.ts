@@ -142,6 +142,11 @@ export class PresenceRoom {
       return;
     }
 
+    if (message.event === "presence-ping") {
+      this.broadcastUsers();
+      return;
+    }
+
     if (message.event === "update-user") {
       entry.user.name = String(message.data?.username || entry.user.name);
       entry.user.avatar = String(message.data?.avatar || entry.user.avatar);
@@ -174,6 +179,18 @@ export class PresenceRoom {
       this.broadcast("cursor-changed", {
         socketId,
         pos: data?.pos ?? message.data,
+      });
+      return;
+    }
+
+    if (message.event === "confetti-send") {
+      this.broadcast("confetti-receive", {
+        id: String(message.data?.id || crypto.randomUUID()),
+        socketId,
+        emoji: String(message.data?.emoji || ""),
+        x: Number(message.data?.x || 0),
+        y: Number(message.data?.y || 0),
+        intensity: Number(message.data?.intensity || 0.5),
       });
     }
   }

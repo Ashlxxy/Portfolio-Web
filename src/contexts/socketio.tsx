@@ -58,6 +58,7 @@ export type UserProfile = { name: string; avatar: string; color: string; isAdmin
 export type CursorPosition = { x: number; y: number };
 
 type LocalSocketPayload = {
+  [key: string]: unknown;
   username?: string;
   avatar?: string;
   color?: string;
@@ -282,6 +283,7 @@ const SocketContextProvider = ({ children }: { children: ReactNode }) => {
     let webSocket: WebSocket | null = null;
     let localModeStarted = false;
     let interval = 0;
+    let presencePingInterval = 0;
     let channel: BroadcastChannel | null = null;
 
     const publishPresence = () => {
@@ -402,6 +404,11 @@ const SocketContextProvider = ({ children }: { children: ReactNode }) => {
         initStatusRef.current = "idle";
         setInitStatus("idle");
         setHasMoreMessages(true);
+        presencePingInterval = window.setInterval(() => {
+          if (webSocket?.readyState === WebSocket.OPEN) {
+            webSocket.send(JSON.stringify({ event: "presence-ping" }));
+          }
+        }, 10_000);
         dispatch("connect");
       });
       webSocket.addEventListener("message", (event) => {
@@ -455,11 +462,13 @@ const SocketContextProvider = ({ children }: { children: ReactNode }) => {
         }
       });
       webSocket.addEventListener("close", () => {
+        if (presencePingInterval) window.clearInterval(presencePingInterval);
         localSocket.connected = false;
         dispatch("disconnect");
         startLocalMode();
       });
       webSocket.addEventListener("error", () => {
+        if (presencePingInterval) window.clearInterval(presencePingInterval);
         localSocket.connected = false;
         dispatch("connect_error");
         startLocalMode();
@@ -470,6 +479,7 @@ const SocketContextProvider = ({ children }: { children: ReactNode }) => {
 
     return () => {
       if (interval) window.clearInterval(interval);
+      if (presencePingInterval) window.clearInterval(presencePingInterval);
       const remaining = readLocalPresence().filter((user) => user.socketId !== socketId);
       writeLocalPresence(remaining);
       channel?.postMessage({ type: "presence", users: remaining });

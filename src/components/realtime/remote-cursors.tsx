@@ -12,7 +12,7 @@ import { AnimatePresence, motion } from "motion/react";
 // TODO: listen to socket disconnect
 const RemoteCursors = () => {
   const { socket, users: _users, cursorPositions, focusedCursorId, setFocusedCursorId } = useContext(SocketContext);
-  const { x, y } = useMouse({ allowPage: true });
+  const { x, y } = useMouse();
   const handleMouseMove = useThrottle((x, y) => {
     socket?.emit("cursor-change", {
       pos: { x, y },
@@ -54,8 +54,7 @@ const RemoteCursors = () => {
   return (
     <div
       //  className="h-0 z-10 relative "
-      className="absolute top-0 left-0 w-full h-full z-10 animate-fade-in pointer-events-none overflow-visible"
-      style={{ minHeight: '100vh' }}
+      className="fixed inset-0 z-[80] animate-fade-in pointer-events-none overflow-visible"
     >
       {users
         .filter((user) => user.socketId !== socket?.id && cursorPositions.has(user.socketId))
