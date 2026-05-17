@@ -10,6 +10,22 @@
     "directory": "out",
     "binding": "ASSETS"
   },
+  "durable_objects": {
+    "bindings": [
+      {
+        "name": "PRESENCE_ROOM",
+        "class_name": "PresenceRoom"
+      }
+    ]
+  },
+  "migrations": [
+    {
+      "tag": "v1",
+      "new_sqlite_classes": [
+        "PresenceRoom"
+      ]
+    }
+  ],
   "observability": {
     "enabled": true
   }

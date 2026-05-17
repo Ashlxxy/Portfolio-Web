@@ -345,9 +345,6 @@ const SocketContextProvider = ({ children }: { children: ReactNode }) => {
 
     setSocket(localSocket);
     socketRef.current = localSocket;
-    initStatusRef.current = "loaded";
-    setInitStatus("loaded");
-    setHasMoreMessages(false);
 
     const handleStorage = (event: StorageEvent) => {
       if (event.key === LOCAL_PRESENCE_KEY) {
@@ -362,6 +359,9 @@ const SocketContextProvider = ({ children }: { children: ReactNode }) => {
       if (localModeStarted) return;
       localModeStarted = true;
       localSocket.connected = true;
+      initStatusRef.current = "loaded";
+      setInitStatus("loaded");
+      setHasMoreMessages(false);
       channel = "BroadcastChannel" in window ? new BroadcastChannel("portfolio-local-presence") : null;
       publishPresence();
       interval = window.setInterval(publishPresence, 5_000);
@@ -389,6 +389,9 @@ const SocketContextProvider = ({ children }: { children: ReactNode }) => {
       webSocket.addEventListener("open", () => {
         window.clearTimeout(fallbackTimer);
         localSocket.connected = true;
+        initStatusRef.current = "idle";
+        setInitStatus("idle");
+        setHasMoreMessages(true);
         dispatch("connect");
       });
       webSocket.addEventListener("message", (event) => {
