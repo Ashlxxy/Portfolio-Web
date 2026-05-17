@@ -7,13 +7,11 @@ import { MousePointer2 } from "lucide-react";
 import React, { useContext, useEffect, useState } from "react";
 
 import { AnimatePresence, motion } from "motion/react";
-import { useMediaQuery } from "@/hooks/use-media-query";
 
 // TODO: add clicking animation
 // TODO: listen to socket disconnect
 const RemoteCursors = () => {
   const { socket, users: _users, cursorPositions, focusedCursorId, setFocusedCursorId } = useContext(SocketContext);
-  const isMobile = useMediaQuery("(max-width: 768px)");
   const { x, y } = useMouse({ allowPage: true });
   const handleMouseMove = useThrottle((x, y) => {
     socket?.emit("cursor-change", {
@@ -22,15 +20,15 @@ const RemoteCursors = () => {
     });
   }, 200);
   useEffect(() => {
-    if (isMobile) return;
+    if (!socket?.connected || (x === 0 && y === 0)) return;
     handleMouseMove(x, y);
-  }, [x, y, isMobile]);
+  }, [x, y, socket?.connected]);
 
   const users = Array.from(_users.values());
 
   // Handle scroll to focused cursor
   useEffect(() => {
-    if (!focusedCursorId || isMobile) return;
+    if (!focusedCursorId) return;
 
     const pos = cursorPositions.get(focusedCursorId);
     if (!pos) return;
@@ -50,7 +48,7 @@ const RemoteCursors = () => {
     }, 2000);
 
     return () => clearTimeout(timeout);
-  }, [focusedCursorId, cursorPositions, isMobile, setFocusedCursorId]);
+  }, [focusedCursorId, cursorPositions, setFocusedCursorId]);
 
 
   return (

@@ -57,6 +57,16 @@ export type UserProfile = { name: string; avatar: string; color: string; isAdmin
 
 export type CursorPosition = { x: number; y: number };
 
+type LocalSocketPayload = {
+  username?: string;
+  avatar?: string;
+  color?: string;
+  content?: string;
+  before?: number;
+  pos?: CursorPosition;
+  socketId?: string;
+};
+
 type SocketContextType = {
   socket: Socket | null;
   users: User[];
@@ -301,7 +311,7 @@ const SocketContextProvider = ({ children }: { children: ReactNode }) => {
         handlers.get(event)?.delete(handler);
         return localSocket;
       },
-      emit: (event: string, payload?: { username?: string; avatar?: string; color?: string; content?: string }) => {
+      emit: (event: string, payload?: LocalSocketPayload) => {
         if (webSocket?.readyState === WebSocket.OPEN) {
           webSocket.send(JSON.stringify({ event, data: payload }));
           if (event === "update-user" && payload) {
@@ -404,13 +414,40 @@ const SocketContextProvider = ({ children }: { children: ReactNode }) => {
           }
           if (message.event === "users-updated") setUsers(message.data as User[]);
           if (message.event === "msg-receive") setMsgs((existing) => [...existing, message.data as Message]);
+          if (message.event === "msgs-receive-init") {
+            const payload = message.data as ChatItem[] | { messages?: ChatItem[]; hasMore?: boolean };
+            const messages = Array.isArray(payload) ? payload : payload.messages || [];
+            setMsgs(messages);
+            setHasMoreMessages(Array.isArray(payload) ? messages.length >= 50 : Boolean(payload.hasMore));
+            initStatusRef.current = "loaded";
+            setInitStatus("loaded");
+            setLoadingHistory(false);
+          }
+          if (message.event === "msgs-receive-history") {
+            const data = message.data as { messages?: ChatItem[]; hasMore?: boolean; reactions?: Record<string, Reaction[]> };
+            setMsgs((prev) => [...(data.messages || []), ...prev]);
+            setHasMoreMessages(Boolean(data.hasMore));
+            setLoadingHistory(false);
+            if (data.reactions) {
+              setReactions((prev) => {
+                const next = new Map(prev);
+                for (const [msgId, rxns] of Object.entries(data.reactions || {})) {
+                  if (rxns.length === 0) next.delete(msgId);
+                  else next.set(msgId, rxns);
+                }
+                return next;
+              });
+            }
+          }
           if (message.event === "cursor-changed") {
             const data = message.data as { pos: CursorPosition; socketId: string };
-            setCursorPositions((prev) => {
-              const next = new Map(prev);
-              next.set(data.socketId, data.pos);
-              return next;
-            });
+            if (data.pos && Number.isFinite(data.pos.x) && Number.isFinite(data.pos.y)) {
+              setCursorPositions((prev) => {
+                const next = new Map(prev);
+                next.set(data.socketId, data.pos);
+                return next;
+              });
+            }
           }
           dispatch(message.event, message.data);
         } catch {

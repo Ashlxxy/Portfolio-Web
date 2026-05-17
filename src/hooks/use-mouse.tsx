@@ -17,7 +17,7 @@ export const useMouse = ({
   const [acceleration, setAcceleration] = useState(0);
 
   useEffect(() => {
-    const handleMouseMove = (e: MouseEvent) => {
+    const handlePointerMove = (e: PointerEvent) => {
       setX(allowPage ? e.pageX : e.clientX);
       setY(allowPage ? e.pageY : e.clientY);
 
@@ -30,8 +30,8 @@ export const useMouse = ({
       }
     };
     if (typeof window !== "undefined")
-      window.addEventListener("mousemove", handleMouseMove);
-    return () => window.removeEventListener("mousemove", handleMouseMove);
+      window.addEventListener("pointermove", handlePointerMove, { passive: true });
+    return () => window.removeEventListener("pointermove", handlePointerMove);
   });
   return { x, y, angle, acceleration };
 };

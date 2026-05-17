@@ -25,7 +25,7 @@ type ChatMessage = {
 
 type PresenceMessage = {
   event: string;
-  data?: Record<string, string>;
+  data?: Record<string, unknown>;
 };
 
 type WorkerWebSocket = WebSocket & {
@@ -143,9 +143,9 @@ export class PresenceRoom {
     }
 
     if (message.event === "update-user") {
-      entry.user.name = message.data?.username || entry.user.name;
-      entry.user.avatar = message.data?.avatar || entry.user.avatar;
-      entry.user.color = message.data?.color || entry.user.color;
+      entry.user.name = String(message.data?.username || entry.user.name);
+      entry.user.avatar = String(message.data?.avatar || entry.user.avatar);
+      entry.user.color = String(message.data?.color || entry.user.color);
       this.broadcastUsers();
       return;
     }
@@ -159,7 +159,7 @@ export class PresenceRoom {
         username: entry.user.name,
         avatar: entry.user.avatar,
         color: entry.user.color,
-        content: message.data.content.slice(0, 500),
+        content: String(message.data.content).slice(0, 500),
         createdAt: new Date().toISOString(),
       };
       const history = await this.getHistory();
@@ -170,9 +170,10 @@ export class PresenceRoom {
     }
 
     if (message.event === "cursor-change") {
+      const data = message.data as { pos?: unknown } | undefined;
       this.broadcast("cursor-changed", {
         socketId,
-        pos: message.data,
+        pos: data?.pos ?? message.data,
       });
     }
   }
