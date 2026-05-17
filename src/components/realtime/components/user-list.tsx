@@ -143,10 +143,6 @@ const UserItem = ({
               </motion.div>
             )}
           </div>
-          <div className={cn("text-[10px] truncate space-x-1", THEME.text.secondary)}>
-            <span>{user.location}</span>
-            <span>{user.flag}</span>
-          </div>
         </div>
       </div>
     </div>

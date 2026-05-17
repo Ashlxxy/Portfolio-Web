@@ -68,7 +68,7 @@ const RemoteCursors = () => {
               color={user.color}
               socketId={user.socketId}
               avatar={user.avatar}
-              headerText={`${user.location} ${user.flag}`}
+              headerText={user.name}
               isFocused={focusedCursorId === user.socketId}
             />
           );

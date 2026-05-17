@@ -29,7 +29,7 @@ export const MessageReactions = ({ reactions, currentSessionId, onToggle, onPick
         {reactions.map(r => {
           const isMine = currentSessionId ? r.sessionIds.includes(currentSessionId) : false;
           const names = r.sessionIds.map(id =>
-            id === currentSessionId ? "You" : (profileMap.get(id)?.name ?? "Unknown")
+            id === currentSessionId ? "You" : (profileMap.get(id)?.name ?? "Guest")
           );
           const tooltipText = names.join(", ");
 

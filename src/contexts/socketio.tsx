@@ -274,8 +274,8 @@ const SocketContextProvider = ({ children }: { children: ReactNode }) => {
       avatar: localStorage.getItem("avatar") || profile.avatar,
       color: localStorage.getItem("color") || profile.color,
       isOnline: true,
-      location: "Unknown",
-      flag: "??",
+      location: "",
+      flag: "",
       lastSeen: new Date().toISOString(),
       createdAt: new Date().toISOString(),
     });

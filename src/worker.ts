@@ -89,8 +89,8 @@ export class PresenceRoom {
       avatar: url.searchParams.get("avatar") || "1",
       color: url.searchParams.get("color") || "#60a5fa",
       isOnline: true,
-      location: "Unknown",
-      flag: "??",
+      location: "",
+      flag: "",
       lastSeen: now,
       createdAt: now,
     };
