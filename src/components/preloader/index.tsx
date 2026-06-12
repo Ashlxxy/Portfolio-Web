@@ -49,6 +49,12 @@ function Preloader({ children, disabled = false }: PreloaderProps) {
   };
   const loadingPercentRef = useRef<{ value: number }>({ value: 0 });
   useEffect(() => {
+    if (disabled) {
+      setLoadingPercent(100);
+      setIsLoading(false);
+      return;
+    }
+
     loadingTween.current = gsap.to(loadingPercentRef.current, {
       value: 100,
       duration: LOADING_TIME,
@@ -60,7 +66,17 @@ function Preloader({ children, disabled = false }: PreloaderProps) {
         setIsLoading(false);
       },
     });
-  }, []);
+
+    const fallback = window.setTimeout(() => {
+      setLoadingPercent(100);
+      setIsLoading(false);
+    }, (LOADING_TIME + 0.5) * 1000);
+
+    return () => {
+      window.clearTimeout(fallback);
+      loadingTween.current?.kill();
+    };
+  }, [disabled]);
 
   return (
     <preloaderContext.Provider
