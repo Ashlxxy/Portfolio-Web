@@ -16,7 +16,7 @@ const ProjectsSection = () => (
         id="projects"
         title="Projects"
         desc="Selected builds from my GitHub and academic work."
-        className="mb-12 mt-0 md:mb-20"
+        className="static mb-12 mt-0 md:mb-20"
       />
       <div className="grid gap-6 lg:grid-cols-2">
         {projects.map((project, index) => (

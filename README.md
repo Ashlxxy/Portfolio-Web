@@ -12,11 +12,10 @@ Personal portfolio website for Ade Rainhard Pasaribu, also known as Ashlxy. The 
 ## Features
 
 - Interactive 3D portfolio hero and skill keyboard
-- Responsive dark themed interface
-- Project showcase with screenshots
+- Resume-backed experience, education, organization, and certification content
+- Responsive project cards sourced from Ade's public GitHub repositories
 - Blog page with MDX content
 - Contact section with mail draft support
-- Resume button linked to the PDF CV in this repository
 - Static export deployment for Cloudflare Workers Assets
 
 ## Tech Stack

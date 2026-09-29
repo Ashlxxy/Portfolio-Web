@@ -24,7 +24,7 @@ const ExperienceSection = () => {
           id="experience"
           title="Experience"
           desc="Work, education, and credentials from my current resume."
-          className="mb-12 mt-0 md:mb-20"
+          className="static mb-12 mt-0 md:mb-20"
         />
 
         <div className="space-y-6">
