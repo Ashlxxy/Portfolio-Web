@@ -258,49 +258,83 @@ export type Experience = {
 export const EXPERIENCE: Experience[] = [
   {
     id: 1,
-    startDate: "Dec 2024",
-    endDate: "Present",
-    title: "Full Stack Developer",
-    company: "OmniNexus Sdn Bhd",
+    startDate: "Jul 2026",
+    endDate: "Oct 2026",
+    title: "Full-Stack Web Developer & QA Intern",
+    company: "PT Radya Anugrah Digital · RadyaLabs",
     description: [
-      "Built a custom image editor from scratch, cutting $4.8k/year in SaaS costs.",
-      "Architected async job queues processing 1k+ AI tasks daily with bulletproof reliability.",
-      "Optimized media delivery pipeline, slashing asset load times by 40%.",
-      "Shipped high-impact features end-to-end from requirements to production.",
+      "Supported full-stack web development across user-facing and server-side work.",
+      "Performed quality-assurance checks to help validate application behavior and delivery readiness.",
     ],
     skills: [
-      SkillNames.NEXTJS,
-      SkillNames.TS,
+      SkillNames.JS,
+      SkillNames.HTML,
+      SkillNames.CSS,
       SkillNames.REACT,
       SkillNames.NODEJS,
-      SkillNames.POSTGRES,
-      SkillNames.MONGODB,
-      SkillNames.DOCKER,
-      SkillNames.GCP,
+      SkillNames.GIT,
     ],
   },
   {
     id: 2,
-    startDate: "Apr 2022",
-    endDate: "Dec 2024",
-    title: "Freelance Full Stack Developer",
-    company: "Self-employed",
+    startDate: "20 May 2024",
+    endDate: "11 Jun 2024",
+    title: "E-Selamat Application Assistance Intern",
+    company: "DKPP Kota Bandung",
     description: [
-      "Transformed chaotic Excel sheets into polished internal tools for various clients.",
-      "Shipped dashboards and custom CMS platforms tailored to each client's workflow.",
-      "Automated repetitive processes, improving efficiency and reducing human error.",
-      "Focused on clean, maintainable code and interfaces that users actually enjoy.",
+      "Assisted activities supporting the E-Selamat application in Bandung.",
     ],
-    skills: [
-      SkillNames.REACT,
-      SkillNames.VUE,
-      SkillNames.NODEJS,
-      SkillNames.EXPRESS,
-      SkillNames.MONGODB,
-      SkillNames.POSTGRES,
-      SkillNames.TAILWIND,
-      SkillNames.WORDPRESS,
-    ],
+    skills: [SkillNames.GIT],
+  },
+];
+
+export const EDUCATION = [
+  {
+    institution: "Telkom University",
+    program: "Bachelor of Information Technology",
+    period: "2023 — Present",
+  },
+];
+
+export const ORGANIZATIONS = [
+  {
+    name: "Megabit Committee",
+    role: "Decoration Division",
+    period: "Jul 2025",
+    description: "Supported event organization, promotion, and social activities.",
+  },
+  {
+    name: "Internet of Things Laboratory",
+    role: "ESP Study Group",
+    period: "Jan — Jun 2026",
+    description: "Participated in guided learning and hands-on ESP practice.",
+  },
+];
+
+export const CERTIFICATIONS = [
+  {
+    title: "AI Ready Certificate",
+    issuer: "ASEAN Foundation",
+    date: "28 Aug 2026",
+  },
+  {
+    title: "MikroTik Certified Routing Engineer (MTCRE)",
+    issuer: "MikroTik",
+    date: "Aug 2026",
+  },
+  {
+    title: "Certified Supply Chain Analyst (CSCA)",
+    issuer: "ISCEA",
+    date: "20 Jan 2026",
+  },
+  {
+    title: "Certified Cybersecurity Educator Professional (CCEP)",
+    date: "17 Dec 2025",
+  },
+  {
+    title: "CAATIS CoE Program",
+    issuer: "Telkom University",
+    date: "5 Sep 2024",
   },
 ];
 
