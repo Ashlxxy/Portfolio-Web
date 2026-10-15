@@ -91,7 +91,7 @@ export default function ExperienceShell({ children }: { children: React.ReactNod
 
   return (
     <>
-      {mode === "persona" ? <PersonaPortfolio /> : classic}
+      {mode === "persona" ? <PersonaPortfolio /> : mode === "classic" ? classic : null}
 
       {chooserOpen && (
         <ExperienceChooser
@@ -106,6 +106,7 @@ export default function ExperienceShell({ children }: { children: React.ReactNod
           <button
             type="button"
             onClick={() => setChooserOpen(true)}
+            aria-label="Switch Experience"
             className="flex min-h-10 items-center gap-2 rounded-full px-3 text-xs font-semibold uppercase tracking-[0.12em] transition hover:bg-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300"
           >
             <RefreshCw className="h-4 w-4" aria-hidden="true" />
@@ -118,6 +119,13 @@ export default function ExperienceShell({ children }: { children: React.ReactNod
             onClick={toggleAudio}
             disabled={audioUnavailable}
             aria-pressed={audioPlaying}
+            aria-label={
+              audioUnavailable
+                ? "Music unavailable"
+                : audioPlaying
+                  ? "Pause Music"
+                  : "Play Music"
+            }
             className="flex min-h-10 items-center gap-2 rounded-full px-3 text-xs font-semibold uppercase tracking-[0.12em] transition hover:bg-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300 disabled:cursor-not-allowed disabled:opacity-45"
           >
             {audioUnavailable ? (

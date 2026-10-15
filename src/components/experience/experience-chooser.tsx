@@ -32,7 +32,7 @@ export default function ExperienceChooser({
 }: ExperienceChooserProps) {
   return (
     <div
-      className="fixed inset-0 z-[100000] overflow-y-auto bg-[#06080d] text-white"
+      className="fixed inset-0 z-[2147483647] overflow-y-auto bg-[#06080d] text-white"
       role="dialog"
       aria-modal="true"
       aria-label="Choose portfolio experience"
