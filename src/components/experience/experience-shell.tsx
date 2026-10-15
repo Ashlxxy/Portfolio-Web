@@ -3,14 +3,17 @@
 import { useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 import { AudioLines, RefreshCw, Volume2, VolumeX } from "lucide-react";
+import { useReducedMotion } from "motion/react";
 import Header from "@/components/header/header";
 import Footer from "@/components/footer/footer";
 import AppOverlays from "@/components/app-overlays";
 import PersonaPortfolio from "@/components/persona/persona-portfolio";
 import ExperienceChooser from "./experience-chooser";
+import transitionStyles from "./persona-entry-transition.module.css";
 import {
   MODE_TRACKS,
   STORAGE_KEY,
+  getModeTransitionTiming,
   isPortfolioMode,
   type PortfolioMode,
 } from "./experience-config";
@@ -23,7 +26,10 @@ export default function ExperienceShell({ children }: { children: React.ReactNod
   const [chooserOpen, setChooserOpen] = useState(false);
   const [audioPlaying, setAudioPlaying] = useState(false);
   const [audioUnavailable, setAudioUnavailable] = useState(false);
+  const [personaEntryActive, setPersonaEntryActive] = useState(false);
+  const shouldReduceMotion = useReducedMotion();
   const audioRef = useRef<HTMLAudioElement>(null);
+  const transitionTimers = useRef<Array<ReturnType<typeof setTimeout>>>([]);
 
   useEffect(() => {
     if (!isHome) return;
@@ -39,6 +45,10 @@ export default function ExperienceShell({ children }: { children: React.ReactNod
     }
   }, [isHome]);
 
+  useEffect(() => () => {
+    transitionTimers.current.forEach(clearTimeout);
+  }, []);
+
   const classic = (
     <>
       <Header />
@@ -50,11 +60,13 @@ export default function ExperienceShell({ children }: { children: React.ReactNod
 
   if (!isHome) return classic;
 
-  function selectMode(nextMode: PortfolioMode) {
+  function applyMode(nextMode: PortfolioMode) {
     window.localStorage.setItem(STORAGE_KEY, nextMode);
     setMode(nextMode);
     setChooserOpen(false);
+  }
 
+  function startAudio(nextMode: PortfolioMode) {
     const audio = audioRef.current;
     if (!audio) return;
     audio.pause();
@@ -67,6 +79,23 @@ export default function ExperienceShell({ children }: { children: React.ReactNod
       .play()
       .then(() => setAudioPlaying(true))
       .catch(() => setAudioPlaying(false));
+  }
+
+  function selectMode(nextMode: PortfolioMode) {
+    if (personaEntryActive) return;
+    startAudio(nextMode);
+
+    const timing = getModeTransitionTiming(nextMode, shouldReduceMotion === true);
+    if (!timing) {
+      applyMode(nextMode);
+      return;
+    }
+
+    setPersonaEntryActive(true);
+    transitionTimers.current.push(
+      setTimeout(() => applyMode(nextMode), timing.switchDelay),
+      setTimeout(() => setPersonaEntryActive(false), timing.finishDelay),
+    );
   }
 
   function toggleAudio() {
@@ -143,6 +172,14 @@ export default function ExperienceShell({ children }: { children: React.ReactNod
                   : "Play Music"}
             </span>
           </button>
+        </div>
+      )}
+
+      {personaEntryActive && (
+        <div className={transitionStyles.overlay} aria-hidden="true">
+          <span className={`${transitionStyles.layer} ${transitionStyles.paper}`} />
+          <span className={`${transitionStyles.layer} ${transitionStyles.ink}`} />
+          <span className={`${transitionStyles.layer} ${transitionStyles.blue}`} />
         </div>
       )}
 
