@@ -16,3 +16,21 @@ export function isPortfolioMode(value: unknown): value is PortfolioMode {
 export function otherPortfolioMode(mode: PortfolioMode): PortfolioMode {
   return mode === "classic" ? "persona" : "classic";
 }
+
+export type ModeTransitionTiming = {
+  switchDelay: number;
+  finishDelay: number;
+};
+
+const PERSONA_ENTRY_TIMING: Record<"default" | "reduced", ModeTransitionTiming> = {
+  default: { switchDelay: 330, finishDelay: 680 },
+  reduced: { switchDelay: 0, finishDelay: 160 },
+};
+
+export function getModeTransitionTiming(
+  mode: PortfolioMode,
+  reducedMotion: boolean,
+): ModeTransitionTiming | null {
+  if (mode !== "persona") return null;
+  return PERSONA_ENTRY_TIMING[reducedMotion ? "reduced" : "default"];
+}
