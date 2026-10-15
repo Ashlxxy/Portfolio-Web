@@ -56,7 +56,7 @@ export default function PersonaPortfolio() {
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
       const target = event.target as HTMLElement | null;
-      if (target?.matches("input, textarea, select, [contenteditable='true']")) return;
+      if (target?.closest("button, a, input, textarea, select, [contenteditable='true']")) return;
       if (event.key === "Escape" && screen !== "home") {
         event.preventDefault();
         goTo("home");
