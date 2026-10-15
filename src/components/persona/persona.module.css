@@ -101,14 +101,14 @@ button.hudTag { cursor: pointer; }
   padding: clamp(28px,5vw,72px);
 }
 
-.homeCopy { align-self: center; min-width: 0; max-width: 760px; }
+.homeCopy { container-type: inline-size; align-self: center; min-width: 0; max-width: 760px; }
 .eyebrow, .sectionKicker { margin: 0 0 12px; font-size: 12px; font-weight: 900; letter-spacing: .33em; text-transform: uppercase; }
 .eyebrow { text-shadow: 2px 2px 0 var(--ink); }
 
 .name {
   margin: 0;
   font-family: var(--font-display), Impact, sans-serif;
-  font-size: clamp(56px,9vw,140px);
+  font-size: clamp(56px,15cqi,140px);
   line-height: .82;
   text-transform: uppercase;
   text-shadow: 7px 7px 0 var(--ink);
