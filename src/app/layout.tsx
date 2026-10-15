@@ -3,12 +3,10 @@ import { Inter, Archivo_Black } from "next/font/google";
 import "./globals.css";
 import { config } from "@/data/config";
 
-import Header from "@/components/header/header";
-import Footer from "@/components/footer/footer";
 import Script from "next/script";
-import AppOverlays from "@/components/app-overlays";
 import { Providers } from "@/components/providers";
 import { GoogleAnalytics } from "@next/third-parties/google";
+import ExperienceShell from "@/components/experience/experience-shell";
 
 export const metadata: Metadata = {
   title: config.title,
@@ -68,10 +66,7 @@ export default function RootLayout({
       </head>
       <body>
         <Providers>
-          <Header />
-          {children}
-          <Footer />
-          <AppOverlays />
+          <ExperienceShell>{children}</ExperienceShell>
         </Providers>
         {process.env.NEXT_PUBLIC_GA_ID && (
           <GoogleAnalytics gaId={process.env.NEXT_PUBLIC_GA_ID} />
